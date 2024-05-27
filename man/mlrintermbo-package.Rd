@@ -4,9 +4,9 @@
 \name{mlrintermbo-package}
 \alias{mlrintermbo}
 \alias{mlrintermbo-package}
-\title{mlrintermbo: An 'mlrMBO' 'mlr3' Interface}
+\title{mlrintermbo: Model-Based Optimization for 'mlr3' Through 'mlrMBO'}
 \description{
-Model-based optimization for 'mlr3' through 'mlrMBO'.
+The 'mlrMBO' package can ordinarily not be used for optimization within 'mlr3', because of incompatibilities of their respective class systems. 'mlrintermbo' offers a compatibility interface that provides 'mlrMBO' as an 'mlr3tuning' 'Tuner' object, for tuning of machine learning algorithms within 'mlr3', as well as a 'bbotk' 'Optimizer' object for optimization of general objective functions using the 'bbotk' black box optimization framework. The control parameters of 'mlrMBO' are faithfully reproduced as a 'paradox' 'ParamSet'.
 }
 \seealso{
 Useful links:

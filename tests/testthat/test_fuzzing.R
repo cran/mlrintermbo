@@ -3,12 +3,7 @@ context("fuzzing")
 test_that("mbo with autotuner", {
   skip_on_cran()
   ll <- lrn("classif.rpart", predict_type = "prob")
-  ps <- ParamSet$new(list(ParamDbl$new("cp", lower = 0, upper = 1), ParamDbl$new("minsplit", lower = 1, upper = 20), ParamDbl$new("minbucket", lower = 1, upper = 20)))
-  ps$trafo <- function(x, param_set) {
-    x$minsplit <- round(x$minsplit)
-    x$minbucket <- round(x$minbucket)
-    x
-  }
+  ps <- (ps(cp = p_dbl(lower = 0, upper = 1), minsplit = p_dbl(lower = 1, upper = 20, trafo = round), minbucket = p_dbl(lower = 1, upper = 20, trafo = round)))
 
   surr <- mlr3::LearnerRegrFeatureless$new()
   surr$predict_type = "se"
@@ -28,7 +23,11 @@ test_that("fuzzing intermbo", {
 
 
   tups <- tnr("intermbo")$param_set$clone(deep = TRUE)
-  psnew <- ParamSet$new(discard(tups$params, function(x) "ParamUty" %in% class(x)))
+  if (is.data.frame(tups$params)) {
+    psnew <- tups$subset(names(which(tups$class != "ParamUty")))
+  } else {
+    psnew <- ParamSet$new(discard(tups$params, function(x) "ParamUty" %in% class(x)))
+  }
 
   for (row in seq_len(nrow(tups$deps))) {
     if (tups$deps[row, id] %in% psnew$ids()) {
@@ -36,33 +35,30 @@ test_that("fuzzing intermbo", {
     }
   }
 
+  for (pn in psnew$ids()[!psnew$is_number]) {
+    psnew$values[[pn]] = to_tune()
+  }
+
   for (pari in which(psnew$is_number)) {
-    par <- psnew$params[[pari]]
-    if (par$is_bounded) next
-    if (is.finite(par$lower)) {
-      if (is.numeric(par$default) && is.finite(par$default) && par$default > par$lower) {
-        par$upper = (par$lower - par$default) + par$default * 2
+    psn = psnew$ids()[[pari]]
+    if (psnew$is_bounded[[pari]]) next
+    if (is.finite(psnew$lower[[pari]])) {
+      if (is.numeric(psnew$default[[psn]]) && is.finite(psnew$default[[psn]]) && psnew$default[[psn]] > psnew$lower[[pari]]) {
+        psnew$values[[psn]] = to_tune(psnew$lower[[pari]], (psnew$lower[[pari]] - psnew$default[[psn]]) + psnew$default[[psn]] * 2)
       } else {
-        par$upper = par$lower + 2
+        psnew$values[[psn]] = to_tune(psnew$lower[[pari]], psnew$lower[[pari]] + 2)
       }
     } else {
-      par$lower = 0
-      par$upper = 1
+      psnew$values[[psn]] = to_tune(0, 1)
     }
   }
-  psnew$params$initial.design.size$lower = 2
-  psnew$params$initial.design.size$upper = 4
+  psnew$values$initial.design.size = to_tune(2, 4)
 
-  ps <- ParamSet$new(list(ParamDbl$new("cp", lower = 0, upper = 1), ParamDbl$new("minsplit", lower = 1, upper = 20), ParamDbl$new("minbucket", lower = 1, upper = 20)))
-  ps$trafo <- function(x, param_set) {
-    x$minsplit <- round(x$minsplit)
-    x$minbucket <- round(x$minbucket)
-    x
-  }
+  ps <- (ps(cp = p_dbl(lower = 0, upper = 1), minsplit = p_dbl(lower = 1, upper = 20, trafo = round), minbucket = p_dbl(lower = 1, upper = 20, trafo = round)))
 
   objective <- ObjectiveRFun$new(function(xs) {
     list(y = (xs$cp - .5) ^ 2 + (assertInt(xs$minsplit) - 10) ^ 2 + (assertInt(xs$minbucket) - 10) ^ 2)
-  }, ps, ParamSet$new(list(ParamDbl$new("y", tags = "minimize"))))
+  }, ps, (ps(y = p_dbl(tags = "minimize"))))
 
 
   tuner <- OptimizerInterMBO$new(on.surrogate.error = "quiet")
@@ -70,7 +66,7 @@ test_that("fuzzing intermbo", {
   set.seed(1)
   for (setting in seq_len(10)) {
     repeat {
-      setting <- generate_design_random(psnew, 1)$transpose()[[1]]
+      setting <- generate_design_random(psnew$search_space(), 1)$transpose()[[1]]
       ##> Multi-point proposal using constant liar needs the infill criterion 'ei' or 'aei', but you used '___'!
       if (setting$multipoint.method == "cl" && !setting$infill.crit %in% c("EI", "AEI", "CB")) next
 
@@ -92,15 +88,14 @@ test_that("fuzzing intermbo", {
   }
 
 
-  psnew$params$initial.design.size$lower = 10
-  psnew$params$initial.design.size$upper = 12
+  psnew$values$initial.design.size = to_tune(2, 4)
 
   tuner <- OptimizerInterMBO$new(on.surrogate.error = "stop")
   set.seed(2)
   for (setting in seq_len(10)) {
 
     repeat {
-      setting <- generate_design_random(psnew, 1)$transpose()[[1]]
+      setting <- generate_design_random(psnew$search_space(), 1)$transpose()[[1]]
       ##> Multi-point proposal using constant liar needs the infill criterion 'ei' or 'aei', but you used '___'!
       if (setting$multipoint.method == "cl" && !setting$infill.crit %in% c("EI", "AEI", "CB")) next
 

@@ -1,7 +1,7 @@
 # mlrintermbo: mlrMBO mlr3 Interface <img src="todo-files/mlrintermbo.png" width="300" align="right" />
 
-[![Build Status](https://travis-ci.org/mb706/mlrintermbo.svg?branch=master)](https://travis-ci.org/mb706/mlrintermbo)
-[![Coverage](https://codecov.io/github/mb706/mlrintermbo/branch/master/graphs/badge.svg)](https://codecov.io/github/mb706/mlrintermbo)
+[![check](https://github.com/mb706/mlrintermbo/actions/workflows/check.yml/badge.svg)](https://github.com/mb706/mlrintermbo/actions/workflows/check.yml)
+[![Coverage](https://codecov.io/github/mb706/mlrintermbo/branch/master/graphs/badge.svg)](https://app.codecov.io/github/mb706/mlrintermbo)
 [![CRAN Status Badge](https://www.r-pkg.org/badges/version/mlrintermbo)](https://CRAN.R-project.org/package=mlrintermbo)
 [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/mlrintermbo)](https://CRAN.R-project.org/package=mlrintermbo)
 
@@ -31,8 +31,31 @@ When installing `mlrintermbo`, the required `mlrMBO` package is not installed au
 
 ```r
 install.packages("mlrMBO")
-remotes::install_github("mlr-org/mlrMBO")
+install.packages("mlrintermbo")
 ```
+
+## Known Issues
+* **Assertion on 'xdt' failed**
+    ```r
+    Error in .__OptimInstance__eval_batch(self = self, private = private,  : 
+      Assertion on 'xdt' failed: Must have at least 1 rows, but has 0 rows.
+    ```
+    
+    This is caused by a [bug in the `callr` package](https://github.com/r-lib/callr/issues/184). The bug is fixed on CRAN, installing the current versions using `install.packages(c("callr", "processx"))` should fix the issue.
+* **Most other errors**
+
+   Some errors, for example
+   
+    ```r
+    Error: Domains[,1] must be less than or equal to Domains[,2]
+    ```
+    
+    are caused because the surrogate model is failing. (The error above happens when the objective function is giving constant values, which the surrogate learner does not handle well). Initialize the tuner with 
+`on.surrogate.error` set to `"warn"` or `"quiet"` to ignore errors of the surrogate model. E.g.:
+
+    ```r
+    tuner <- tnr("intermbo", on.surrogate.error = "warn")  # alternatively "quiet"
+    ```
 
 ## License
 
