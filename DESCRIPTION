@@ -18,14 +18,14 @@ Suggests: mlr, ParamHelpers, testthat, rgenoud, DiceKriging, emoa,
         cmaesr, randomForest, smoof, lgr, mlr3, mlr3learners,
         mlr3pipelines, mlrMBO, ranger, rpart, mco
 ByteCompile: yes
-Version: 0.5.1
+Version: 0.5.1-1
 RoxygenNote: 7.3.1
 Collate: 'utils.R' 'CapsuledMlr3Learner.R' 'ParamHelpersParamSet.R'
         'optimize.R' 'paramset.R' 'TunerInterMBO.R' 'surrogates.R'
         'zzz.R'
 NeedsCompilation: no
-Packaged: 2024-05-27 18:17:50 UTC; user
+Packaged: 2024-06-07 22:15:10 UTC; user
 Author: Martin Binder [aut, cre]
 Maintainer: Martin Binder <developer.mb706@doublecaret.com>
 Repository: CRAN
-Date/Publication: 2024-05-27 18:40:03 UTC
+Date/Publication: 2024-06-07 22:30:02 UTC
